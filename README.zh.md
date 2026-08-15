@@ -16,8 +16,8 @@ questions.jsonl ──▶ run.mjs ──▶ manifest.jsonl(问题 id ↔ 会话 
 ## 你能得到什么
 
 - **每个问题一个独立会话**。每次运行会拉起 `dsh --profile headless "<问题>"`,
-  创建一个会话 id 固定为 `batch-<问题id>` 的新会话(通过 `DSH_SESSION_ID` 指定),
-  跑完任务、把日志落盘后退出。
+  创建一个会话 id 固定为 `batch-<问题id>` 的新会话(通过 `DSH_HEADLESS_SESSION_ID`
+  指定),跑完任务、把日志落盘后退出。
 - **manifest.jsonl**:问题 id ↔ 会话 id 的映射,以及状态(`ok` / `error` /
   `timeout`)、退出码、耗时和最终回答文本。
 - **training.jsonl**:训练语料,每行一个会话(根会话在前,子代理后代随后),
@@ -74,8 +74,8 @@ node export.mjs --out training.jsonl
 - 全部语料:`GET /api/train.export?allSessions=1&includeDescendants=true`
   (下载文件名 `dsh-train-all.jsonl`)
 - Web 界面:Header 上的「训练数据」按钮或 `/export-train` 命令,导出当前会话。
-- 终端单跑:`DSH_SESSION_ID=batch-q-001 dsh --profile headless "…"` 可不开脚本
-  直接把一个问题跑进固定会话。
+- 终端单跑:`DSH_HEADLESS_SESSION_ID=batch-q-001 dsh --profile headless "…"`
+  可不开脚本直接把一个问题跑进固定会话。
 
 ## 注意事项与排障
 

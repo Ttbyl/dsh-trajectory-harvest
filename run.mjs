@@ -23,9 +23,9 @@
  * Outputs manifest.jsonl:
  *   {"id":"q-001","session":"batch-q-001","status":"ok","exitCode":0,
  *    "elapsedMs":12345,"answer":"final assistant text"}
- * The session id equals DSH_SESSION_ID, so you can later export training data
- * per question via /api/train.export?sessionId=batch-q-001, or the whole
- * corpus via /api/train.export?allSessions=1.
+ * The session id equals DSH_HEADLESS_SESSION_ID, so you can later export
+ * training data per question via /api/train.export?sessionId=batch-q-001, or
+ * the whole corpus via /api/train.export?allSessions=1.
  */
 import { spawn } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -110,7 +110,10 @@ function runOne(question, opts) {
     const startedAt = Date.now()
     const child = spawn(opts.dshCmd, ['--profile', 'headless', question.prompt], {
       cwd: opts.cwd,
-      env: { ...process.env, DSH_SESSION_ID: sessionId },
+      // DSH_HEADLESS_SESSION_ID (not DSH_SESSION_ID, which the harness shell
+      // env injects into every child process of a live session) pins the
+      // session id so the question→session mapping survives the run.
+      env: { ...process.env, DSH_HEADLESS_SESSION_ID: sessionId },
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     })

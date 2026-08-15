@@ -18,8 +18,8 @@ questions.jsonl ──▶ run.mjs ──▶ manifest.jsonl (question id ↔ sess
 
 - **One session per question.** Each run spawns
   `dsh --profile headless "<prompt>"`, which creates a fresh session whose id
-  is pinned to `batch-<question id>` (via `DSH_SESSION_ID`), runs the task,
-  flushes the log to durable storage, and exits.
+  is pinned to `batch-<question id>` (via `DSH_HEADLESS_SESSION_ID`), runs the
+  task, flushes the log to durable storage, and exits.
 - **manifest.jsonl** maps question ids to session ids with status
   (`ok` / `error` / `timeout`), exit code, elapsed time, and the final answer.
 - **training.jsonl** is the training corpus: one line per session (root first,
@@ -81,8 +81,8 @@ The same data is available without these scripts:
   (downloads `dsh-train-all.jsonl`)
 - Web UI: the **Train data** header button or the `/export-train` slash
   command exports the current session.
-- Terminal: `DSH_SESSION_ID=batch-q-001 dsh --profile headless "…"` runs one
-  question into a pinned session id without the script.
+- Terminal: `DSH_HEADLESS_SESSION_ID=batch-q-001 dsh --profile headless "…"`
+  runs one question into a pinned session id without the script.
 
 ## Notes & troubleshooting
 
