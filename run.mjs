@@ -12,7 +12,9 @@
  * Options:
  *   --concurrency <n>   how many dsh processes may run at once (default 1;
  *                       keep small to avoid provider rate limits)
- *   --dsh-cmd <cmd>     the dsh command (default "dsh"; e.g. "pnpm dsh")
+ *   --dsh-cmd <cmd>     the dsh command (default "dsh"; leading args allowed,
+ *                       e.g. on Windows from harness sources:
+ *                       "node --import tsx/esm apps/cli/src/bin.ts"; env DSH_CMD)
  *   --cwd <dir>         working directory for each dsh process (default: this
  *                       directory)
  *   --timeout <min>     per-question timeout in minutes (default 30)
@@ -108,7 +110,10 @@ function runOne(question, opts) {
   return new Promise((resolvePromise) => {
     const sessionId = sessionIdFor(opts.sessionPrefix, question.id)
     const startedAt = Date.now()
-    const child = spawn(opts.dshCmd, ['--profile', 'headless', question.prompt], {
+    // The dsh command may carry leading arguments, e.g. on Windows with the
+    // harness sources: "node --import tsx/esm apps/cli/src/bin.ts".
+    const [program, ...prefixArgs] = opts.dshCmd.trim().split(/\s+/)
+    const child = spawn(program, [...prefixArgs, '--profile', 'headless', question.prompt], {
       cwd: opts.cwd,
       // DSH_HEADLESS_SESSION_ID (not DSH_SESSION_ID, which the harness shell
       // env injects into every child process of a live session) pins the
@@ -177,7 +182,10 @@ async function main() {
   const keep = opts.keepFailures
     ? results
     : results.filter(result => result.status === 'ok')
-  await writeFile(resolve(opts.cwd, opts.manifest),
+  // The manifest always lands next to the script invocation (where the
+  // questions file lives), never inside --cwd, which only sets the dsh
+  // working directory.
+  await writeFile(resolve(process.cwd(), opts.manifest),
     keep.map(result => JSON.stringify(result)).join('\n') + (keep.length > 0 ? '\n' : ''), 'utf8')
   const ok = results.filter(result => result.status === 'ok').length
   process.stderr.write(`done: ${ok}/${questions.length} ok, manifest: ${opts.manifest}\n`)
