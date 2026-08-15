@@ -1,0 +1,3 @@
+{"id": "q-001", "prompt": "List the files in this project and summarize what each does."}
+{"id": "q-002", "prompt": "What is 2 + 2? Answer with just the number."}
+{"id": "q-003", "prompt": "Write a one-line bash command that prints the current git branch."}
