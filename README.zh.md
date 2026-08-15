@@ -30,8 +30,9 @@ questions.jsonl ──▶ run.mjs ──▶ manifest.jsonl(问题 id ↔ 会话 
 
 - **dsh Web 服务和 headless 运行必须共用同一个 `DSH_HOME`**(默认 `~/.dsh`),
   否则 `export.mjs` 看不到 `run.mjs` 建出来的会话。
-- `dsh` 命令需要在 `PATH` 里(或传 `--dsh-cmd`;从仓库启动用
-  `--dsh-cmd "pnpm dsh"`,也可设环境变量 `DSH_CMD`)。
+- `dsh` 命令需要在 `PATH` 里(或传 `--dsh-cmd`;从仓库源码在 Windows 上跑用
+  `--dsh-cmd "node --import tsx/esm apps/cli/src/bin.ts"`,也可设环境变量
+  `DSH_CMD`)。
 - 每次运行都会真实调用模型 API:**会消耗你的 API 额度**,请先用 2–3 个问题试跑。
 
 ## 用法
@@ -53,7 +54,7 @@ node export.mjs --out training.jsonl
 | 参数 | 默认值 | 含义 |
 | --- | --- | --- |
 | `--concurrency <n>` | `1` | 同时运行几个 dsh 进程 |
-| `--dsh-cmd <cmd>` | `dsh` | dsh 命令(例如 `pnpm dsh`);也支持环境变量 `DSH_CMD` |
+| `--dsh-cmd <cmd>` | `dsh` | dsh 命令;支持带前置参数(例如 `node --import tsx/esm apps/cli/src/bin.ts`);也支持环境变量 `DSH_CMD` |
 | `--cwd <dir>` | 本目录 | 每个运行的工作目录 |
 | `--timeout <min>` | `30` | 单题超时(分钟) |
 | `--manifest <file>` | `manifest.jsonl` | 输出清单路径 |

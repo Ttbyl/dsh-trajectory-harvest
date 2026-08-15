@@ -33,8 +33,9 @@ questions.jsonl ──▶ run.mjs ──▶ manifest.jsonl (question id ↔ sess
 
 - The **dsh Web server and the headless runs must share the same `DSH_HOME`**
   (default `~/.dsh`) so `export.mjs` can see the sessions `run.mjs` created.
-- `dsh` must be on `PATH` (or pass `--dsh-cmd`; from the repository use
-  `--dsh-cmd "pnpm dsh"`, or set `DSH_CMD`).
+- `dsh` must be on `PATH` (or pass `--dsh-cmd`; from the harness sources on
+  Windows use `--dsh-cmd "node --import tsx/esm apps/cli/src/bin.ts"`, or set
+  `DSH_CMD`).
 - Each run calls the real LLM provider: **it consumes your API quota.** Start
   with 2–3 questions.
 
@@ -57,7 +58,7 @@ node export.mjs --out training.jsonl
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--concurrency <n>` | `1` | how many dsh processes may run at once |
-| `--dsh-cmd <cmd>` | `dsh` | the dsh command (e.g. `pnpm dsh`); env `DSH_CMD` |
+| `--dsh-cmd <cmd>` | `dsh` | the dsh command; leading args allowed (e.g. `node --import tsx/esm apps/cli/src/bin.ts`); env `DSH_CMD` |
 | `--cwd <dir>` | this dir | working directory for each run |
 | `--timeout <min>` | `30` | per-question timeout in minutes |
 | `--manifest <file>` | `manifest.jsonl` | output manifest path |
