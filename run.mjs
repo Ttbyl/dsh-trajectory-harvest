@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * llm-trajectory-harvest: run one JSONL of questions through dsh headless
+ * dsh-trajectory-harvest: run one JSONL of questions through dsh headless
  * mode and write a manifest mapping each question id to its session id.
  *
  * questions file format (JSONL, one object per line):
@@ -193,6 +193,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  process.stderr.write(`llm-trajectory-harvest failed: ${error instanceof Error ? error.message : String(error)}\n`)
+  process.stderr.write(`dsh-trajectory-harvest failed: ${error instanceof Error ? error.message : String(error)}\n`)
   process.exit(1)
 })

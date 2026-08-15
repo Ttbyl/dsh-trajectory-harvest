@@ -1,17 +1,16 @@
-# llm-trajectory-harvest
+# dsh-trajectory-harvest
 
 Harvest clean, model-training trajectories from DeepSeek Harness: feed it a
-JSONL list of questions, get one durable session per question, then export the
-whole corpus as one training-ready JSONL.
+JSONL list of questions, get one durable session per question, then fold the
+whole corpus into one training-ready JSONL — online via the Web server or
+**offline straight from the session store**.
 
 ```
 questions.jsonl ──▶ run.mjs ──▶ manifest.jsonl (question id ↔ session id)
                                      │
-                                     ▼   (dsh Web server running)
-                              /api/train.export?allSessions=1
-                                     │
-                                     ▼
-                              export.mjs ──▶ training.jsonl
+              ┌──────────────────────┴──────────────────────┐
+              ▼ (offline, no dsh running)   ▼ (dsh Web server running, new build)
+  export-offline.mjs ──▶ training.jsonl    export.mjs ──▶ training.jsonl
 ```
 
 ## What you get
@@ -31,15 +30,15 @@ questions.jsonl ──▶ run.mjs ──▶ manifest.jsonl (question id ↔ sess
 
 ## Requirements
 
-- The **dsh Web server and the headless runs must share the same `DSH_HOME`**
-  (default `~/.dsh`) so `export.mjs` can see the sessions `run.mjs` created.
+- The **offline export reads the same `DSH_HOME`** (default `~/.dsh`) that the
+  headless runs wrote into. No dsh process needs to be running.
 - `dsh` must be on `PATH` (or pass `--dsh-cmd`; from the harness sources on
   Windows use `--dsh-cmd "node --import tsx/esm apps/cli/src/bin.ts"`, or set
   `DSH_CMD`).
 - Each run calls the real LLM provider: **it consumes your API quota.** Start
   with 2–3 questions.
 
-## Usage
+## Usage (two steps, no restart needed)
 
 ```bash
 # 1. Prepare questions (one JSON object per line)
@@ -49,9 +48,14 @@ questions.jsonl ──▶ run.mjs ──▶ manifest.jsonl (question id ↔ sess
 node run.mjs questions.jsonl --concurrency 1
 node run.mjs questions.jsonl --concurrency 2 --manifest run-1.jsonl
 
-# 3. Export the whole corpus (dsh Web server must be running)
-node export.mjs --out training.jsonl
+# 3. Export the whole corpus — offline, straight from $DSH_HOME/sessions
+node export-offline.mjs --harness C:\path\to\deepseek-harness --out training.jsonl
 ```
+
+That's it: no Web server, no restart. The offline exporter mounts the harness
+persistence + session-query services over your session store and reuses the
+exact same surface fold the Web export uses, so the format is identical to
+`/api/train.export?allSessions=1`.
 
 ### run.mjs options
 
@@ -65,21 +69,27 @@ node export.mjs --out training.jsonl
 | `--keep-failures` | off | also write failed runs to the manifest |
 | `--session-prefix <p>` | `batch` | session id prefix (`batch-<id>`) |
 
-### export.mjs options
+### export-offline.mjs options
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--harness <dir>` | *(required)* | deepseek-harness repository root (reads its compiled lib artifacts) |
+| `--dsh-home <dir>` | `$DSH_HOME` or `~/.dsh` | dsh home; sessions are read from `<dsh-home>/sessions` |
+| `--out <file>` | `training.jsonl` | output file |
+| `--no-descendants` | off | do not include subagent descendants |
+
+### export.mjs options (online path, only if the Web server runs the new build)
 
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--base <url>` | `http://127.0.0.1:3080` | dsh Web host base URL |
-| `--out <file>` | `training.jsonl` | output file (streamed, never held fully in memory) |
+| `--out <file>` | `training.jsonl` | output file (streamed) |
 | `--no-descendants` | off | do not include subagent descendants |
 
 ## Manual / alternative entry points
 
-The same data is available without these scripts:
-
 - One session: `GET /api/train.export?sessionId=batch-q-001&includeDescendants=true`
-- Whole corpus: `GET /api/train.export?allSessions=1&includeDescendants=true`
-  (downloads `dsh-train-all.jsonl`)
+- Whole corpus (online): `GET /api/train.export?allSessions=1&includeDescendants=true`
 - Web UI: the **Train data** header button or the `/export-train` slash
   command exports the current session.
 - Terminal: `DSH_HEADLESS_SESSION_ID=batch-q-001 dsh --profile headless "…"`
@@ -91,8 +101,8 @@ The same data is available without these scripts:
   same session. Use fresh ids or a new `--session-prefix` per batch.
 - **Blank sessions are skipped**: a run that never produced a turn writes no
   training line.
-- `export.mjs` fails loud if the Web server is not running or the sessions are
-  invisible (wrong `DSH_HOME`).
+- For a consistent snapshot, do not run `export-offline.mjs` while a dsh
+  process is actively writing sessions.
 - The training schema comes from the `@deepseek-ai/dsh-session-train-export`
   host fold (`foldSurface`, the same fold the Web Trajectory view renders):
   compaction replacements are folded, shadowed messages excluded, raw stream

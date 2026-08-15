@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * llm-trajectory-harvest export: download the whole training corpus as one
+ * dsh-trajectory-harvest export: download the whole training corpus as one
  * JSONL file from the dsh Web host's /api/train.export endpoint
  * (allSessions=1).
  *
@@ -69,6 +69,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  process.stderr.write(`llm-trajectory-harvest export failed: ${error instanceof Error ? error.message : String(error)}\n`)
+  process.stderr.write(`dsh-trajectory-harvest export failed: ${error instanceof Error ? error.message : String(error)}\n`)
   process.exit(1)
 })
